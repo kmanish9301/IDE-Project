@@ -1,6 +1,5 @@
-// /src/components/Terminal.jsx
-import React, { useState } from "react";
 import { Box, TextField } from "@mui/material";
+import React, { useState } from "react";
 
 const Terminal = () => {
   const [command, setCommand] = useState("");

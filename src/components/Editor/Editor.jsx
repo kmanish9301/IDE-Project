@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
 import { Editor as MonacoEditor } from "@monaco-editor/react";
+import React, { useEffect, useState } from "react";
 
 const Editor = ({ selectedFile }) => {
   const [content, setContent] = useState("");

@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from "react";
 import { Box } from "@mui/material";
+import React, { useCallback, useState } from "react";
 import Editor from "./Editor/Editor";
-import Terminal from "./Terminal/Terminal";
 import Sidebar from "./Sidebar/Sidebar";
+import Terminal from "./Terminal/Terminal";
 
 const IdeContainer = () => {
   const [fileStructure, setFileStructure] = useState([]);

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Box, IconButton } from "@mui/material";
 import { AddCircleOutline, Folder, InsertDriveFile } from "@mui/icons-material";
+import { Box, IconButton } from "@mui/material";
+import React, { useState } from "react";
 
 const Sidebar = ({
   fileStructure,
