@@ -6,11 +6,17 @@ const Editor = ({ selectedFile }) => {
 
   useEffect(() => {
     if (selectedFile) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setContent(event.target.result);
-      };
-      reader.readAsText(selectedFile.content); // Assuming file.content is a File object
+      if (selectedFile.content instanceof Blob) {
+        // Handle uploaded files
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setContent(event.target.result);
+        };
+        reader.readAsText(selectedFile.content);
+      } else {
+        // Handle manually created files
+        setContent(selectedFile.content);
+      }
     }
   }, [selectedFile]);
 

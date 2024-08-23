@@ -18,10 +18,11 @@ const IdeContainer = () => {
   const addFile = useCallback(
     (parentFolderName, newFileName) => {
       const addFileRecursively = (structure, parentFolderName, newFile) => {
-        if (parentFolderName === null) {
-          // Add file at the root level
+        if (!parentFolderName) {
+          // Add file at the root level if no parentFolderName is provided
           return [...structure, { name: newFile, type: "file", content: "" }];
         }
+
         return structure.map((item) => {
           if (item.name === parentFolderName && item.type === "folder") {
             return {

@@ -1,6 +1,6 @@
 import { AddCircleOutline, Folder, InsertDriveFile } from "@mui/icons-material";
 import { Box, IconButton } from "@mui/material";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const Sidebar = ({
   fileStructure,
@@ -10,6 +10,8 @@ const Sidebar = ({
   onSelectFile,
 }) => {
   const [data, setData] = useState(fileStructure);
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  const sidebarRef = useRef(null);
 
   const handleFileUpload = (e) => {
     const files = e.target.files;
@@ -42,17 +44,61 @@ const Sidebar = ({
   const handleAddFile = () => {
     const newFileName = prompt("Enter file name:");
     if (newFileName) {
-      onAddFile(null, newFileName); // Pass null for parentFolderName
-      setData([...data]); // Refresh tree view
+      const updatedStructure = addItemToStructure(data, selectedFolder?.name, {
+        name: newFileName,
+        type: "file",
+      });
+      onAddFile(selectedFolder ? selectedFolder.name : null, newFileName);
+      setData(updatedStructure);
     }
   };
 
   const handleAddFolder = () => {
     const newFolderName = prompt("Enter folder name:");
     if (newFolderName) {
-      onAddFolder(null, newFolderName); // Pass null for parentFolderName
-      setData([...data]); // Refresh tree view
+      let updatedStructure;
+      if (selectedFolder) {
+        updatedStructure = addItemToStructure(data, selectedFolder.name, {
+          name: newFolderName,
+          type: "folder",
+          children: [],
+          toggled: false,
+        });
+      } else {
+        updatedStructure = [
+          ...data,
+          {
+            name: newFolderName,
+            type: "folder",
+            children: [],
+            toggled: false,
+          },
+        ];
+      }
+      onAddFolder(selectedFolder ? selectedFolder.name : null, newFolderName);
+      setData(updatedStructure);
+      setSelectedFolder(null); // Deselect any previously selected folder
     }
+  };
+
+  const addItemToStructure = (structure, folderName, newItem) => {
+    if (!folderName) return [...structure, newItem];
+
+    return structure.map((item) => {
+      if (item.type === "folder" && item.name === folderName) {
+        return {
+          ...item,
+          children: [...(item.children || []), newItem],
+          toggled: true,
+        };
+      } else if (item.children) {
+        return {
+          ...item,
+          children: addItemToStructure(item.children, folderName, newItem),
+        };
+      }
+      return item;
+    });
   };
 
   const TreeNode = ({ node, onToggle }) => (
@@ -60,11 +106,17 @@ const Sidebar = ({
       <span
         style={{
           cursor: "pointer",
-          fontWeight: node.toggled ? "bold" : "normal",
+          fontWeight: selectedFolder?.name === node.name ? "bold" : "normal",
         }}
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           if (node.type === "folder") {
-            onToggle(node);
+            if (selectedFolder?.name === node.name) {
+              setSelectedFolder(null); // Deselect if clicking on the already selected folder
+            } else {
+              onToggle(node);
+              setSelectedFolder(node);
+            }
           } else if (node.type === "file") {
             onSelectFile(node);
           }
@@ -88,8 +140,29 @@ const Sidebar = ({
     setData([...data]);
   };
 
+  const handleClickOutside = (e) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+      setSelectedFolder(null);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <Box sx={{ width: 250, backgroundColor: "#3e3e3e" }}>
+    <Box
+      ref={sidebarRef}
+      sx={{
+        width: 250,
+        backgroundColor: "#3e3e3e",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <input
         type="file"
         webkitdirectory="true"
@@ -99,17 +172,25 @@ const Sidebar = ({
         id="upload-folder"
         onChange={handleFileUpload}
       />
-      <label htmlFor="upload-folder">
-        <IconButton component="span">
-          <AddCircleOutline />
-        </IconButton>
-      </label>
-      <IconButton onClick={handleAddFolder}>
-        <Folder />
-      </IconButton>
-      <IconButton onClick={handleAddFile}>
-        <InsertDriveFile />
-      </IconButton>
+      <Box
+        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+      >
+        <label htmlFor="upload-folder">
+          <IconButton component="span">
+            <AddCircleOutline />
+          </IconButton>
+        </label>
+
+        <Box>
+          <IconButton onClick={handleAddFolder}>
+            <Folder />
+          </IconButton>
+          <IconButton onClick={handleAddFile}>
+            <InsertDriveFile />
+          </IconButton>
+        </Box>
+      </Box>
+
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
         {data.map((item, index) => (
           <TreeNode key={index} node={item} onToggle={handleToggle} />
